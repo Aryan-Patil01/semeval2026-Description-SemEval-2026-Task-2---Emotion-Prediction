@@ -198,10 +198,7 @@ submission = test[
     ['text_id', 'pred_valence', 'pred_arousal']
 ]
 
-submission.to_csv(
-    r'D:\MLproject semeval\results\submission.csv',
-    index=False
-)
+submission.to_csv(r'D:\MLproject semeval\results\rf_submission.csv', index=False)
 
 # ================================
 # FINAL OUTPUT
