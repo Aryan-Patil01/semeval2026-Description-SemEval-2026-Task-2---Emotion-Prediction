@@ -182,3 +182,10 @@ print("=" * 50)
 
 print("\n✅ Baseline training complete!")
 print("Feature importance chart saved.")
+np.save(r'D:\MLproject semeval\results\rf_val_preds.npy', rf_pred_val)
+
+np.save(r'D:\MLproject semeval\results\xgb_val_preds.npy', xgb_pred_val)
+
+np.save(r'D:\MLproject semeval\results\true_val.npy', np.array(yv_vl))
+
+print("Predictions saved!")
