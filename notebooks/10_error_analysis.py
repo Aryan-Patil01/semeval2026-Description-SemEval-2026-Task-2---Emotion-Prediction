@@ -129,77 +129,70 @@ ax3.set_ylabel('Count')
 
 ax3.set_title('Valence Error Distribution')
 
-# ── Chart 4 ──────────────────────────────────────────
-# Essays vs Feeling Words
+# ==============================
+# CHART 4 — Essays vs Feeling Words
+# ==============================
+
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestRegressor
+from scipy.stats import pearsonr
+
+train_full = pd.read_csv(r'D:\MLproject semeval\data\train_features.csv')
+
+X_tr2, X_vl2, yv_tr2, yv_vl2 = train_test_split(
+    train_full[['word_count','is_feeling_words','sentiment_polarity',
+                'positive_word_ratio','negative_word_ratio','emotion_word_count',
+                'avg_word_length','first_person_count','intensifier_count',
+                'exclamation_count','hour_of_day','day_of_week',
+                'days_since_first']].fillna(0),
+    train_full['valence'],
+    test_size=0.2,
+    random_state=42
+)
+
+rf2 = RandomForestRegressor(
+    n_estimators=100,
+    random_state=42,
+    n_jobs=-1
+)
+
+rf2.fit(X_tr2, yv_tr2)
+
+val_preds2 = rf2.predict(X_vl2)
+
+# Split validation set
+val_df2 = train_full.iloc[X_vl2.index].copy()
+val_df2['pred'] = val_preds2
+
+essays_v = val_df2[val_df2['is_feeling_words'] == 0]
+fwords_v = val_df2[val_df2['is_feeling_words'] == 1]
+
+r_e = pearsonr(essays_v['valence'], essays_v['pred'])[0]
+r_f = pearsonr(fwords_v['valence'], fwords_v['pred'])[0]
 
 ax4 = fig.add_subplot(gs[1, 1])
 
-train_info = pd.read_csv(
-    r'D:\MLproject semeval\data\train_subtask1.csv'
-)[['text_id', 'is_words']]
-
-merged2 = submission.merge(
-    labels,
-    on='text_id'
-).merge(
-    train_info,
-    on='text_id',
-    how='left'
+bars = ax4.bar(
+    ['Essays', 'Feeling Words'],
+    [r_e, r_f],
+    color=['steelblue', 'coral'],
+    width=0.5,
+    edgecolor='white'
 )
 
-if 'is_words' in merged2.columns:
+ax4.set_ylim(0, 1)
+ax4.set_ylabel('Pearson r (Valence)')
+ax4.set_title('Performance: Essays vs Feeling Words')
 
-    essays = merged2[merged2['is_words'] == False]
-
-    fwords = merged2[merged2['is_words'] == True]
-
-    r_essay, _ = pearsonr(
-        essays['valence'],
-        essays['pred_valence']
-    )
-
-    r_fword, _ = pearsonr(
-        fwords['valence'],
-        fwords['pred_valence']
-    )
-
-    bars = ax4.bar(
-        ['Essays', 'Feeling Words'],
-        [r_essay, r_fword],
-        width=0.5
-    )
-
-    ax4.set_ylim(0, 1)
-
-    ax4.set_ylabel('Pearson r')
-
-    ax4.set_title(
-        'Performance: Essays vs Feeling Words'
-    )
-
-    for bar, val in zip(
-        bars,
-        [r_essay, r_fword]
-    ):
-
-        ax4.text(
-            bar.get_x() + bar.get_width()/2,
-            bar.get_height() + 0.02,
-            f'{val:.3f}',
-            ha='center'
-        )
-
-else:
-
+for bar, val in zip(bars, [r_e, r_f]):
     ax4.text(
-        0.5,
-        0.5,
-        'is_words column not found',
+        bar.get_x() + bar.get_width()/2,
+        bar.get_height() + 0.02,
+        f'{val:.3f}',
         ha='center',
-        va='center',
-        transform=ax4.transAxes
+        fontsize=11,
+        fontweight='bold'
     )
-
 # ── Save charts ──────────────────────────────────────
 
 plt.savefig(
